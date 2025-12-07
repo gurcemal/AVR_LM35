@@ -1,0 +1,48 @@
+
+uint8_t u8_ADC_Value_L  = 0;
+uint8_t u8_ADC_Value_H  = 0;
+
+uint16_t u16_ADC_Value  = 0;
+
+float f_ADC_Voltage     = 0;
+float f_Temp            = 0;
+
+void setup() {
+  // ADC INIT
+  ADCSRA |= (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0);   // Prescaler:128
+  ADMUX  |= (1 << MUX1) | (1 << MUX0);                    //3. analog channel activated (A3)
+  ADMUX  |= (1 << REFS0);                                 // Reference
+  ADMUX  |= (1 << ADLAR);                                 // adjusted left
+  DIDR0  |= (1 << ADC3D);                                 // ADC pin is disabled for digital input
+  ADCSRA |= (1 << ADEN);                                  //  ADC active
+
+  Serial.begin(9600);
+}
+void loop()
+{
+
+  ADCSRA |= (1 << ADSC);    // Start conversation
+
+  while (ADCSRA & (1 << ADSC))
+  {
+    u8_ADC_Value_L = (ADCL | (0 << ADCL));
+    u8_ADC_Value_H = (ADCH | (0 << ADCH));
+  }
+
+  u8_ADC_Value_L = u8_ADC_Value_L >> 6;
+  u16_ADC_Value = u8_ADC_Value_H << 2;
+  u16_ADC_Value = (u16_ADC_Value | u8_ADC_Value_L);
+  Serial.print("u16_ADC_Value: ");
+  Serial.print(u16_ADC_Value);
+  Serial.print("    ");
+
+  f_ADC_Voltage = (u16_ADC_Value / 1023.0) * 5000;
+  Serial.print("f_ADC_Voltage: ");
+  Serial.print(f_ADC_Voltage);
+
+  f_Temp = f_ADC_Voltage / 10.0;
+  Serial.print("    ");
+  Serial.print("Temp:");
+  Serial.println(f_Temp);
+
+}
